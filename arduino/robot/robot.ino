@@ -31,16 +31,16 @@
 #define ON 0x0
 
 // Create software serial object to communicate with BC417
-Servo myServo; 
+Servo myServo;
 SoftwareSerial BTserial(BT_RX_PIN, BT_TX_PIN); // RX, TX
 Ultrasonic ultrasonic(ULTRASONIC_TRIG_PIN, ULTRASONIC_ECHO_PIN);
-String btCommandBuffer = ""; 
-String lcCommandBuffer = ""; 
+String btCommandBuffer = "";
+String lcCommandBuffer = "";
 
 void setup() {
   // Setup buzzer pin
   pinMode(BUZZER_PIN, OUTPUT);
-  
+
   // 设置所有电机引脚为输出
   pinMode(WHEEL_R1_PIN, OUTPUT);
   pinMode(WHEEL_R2_PIN, OUTPUT);
@@ -54,7 +54,7 @@ void setup() {
   // ULTRASONIC sensor
   pinMode(ULTRASONIC_TRIG_PIN, OUTPUT);
   pinMode(ULTRASONIC_ECHO_PIN, INPUT);
-  
+
   // Servo Motor
   pinMode(SERVO_MOTOR_PIN, OUTPUT);
   myServo.attach(SERVO_MOTOR_PIN);
@@ -63,12 +63,12 @@ void setup() {
   pinMode(LED_GREEN_PIN, OUTPUT);
 
   // // Open serial communications:
-  Serial.begin(9600);        
-  BTserial.begin(9600);  
+  Serial.begin(9600);
+  BTserial.begin(9600);
   init_state();
 
-  Serial.println("Robot is Ready");  
-  BTserial.println("Remote Robot is Ready");  
+  Serial.println("Robot is Ready");
+  BTserial.println("Remote Robot is Ready");
 }
 
 void init_state() {
@@ -87,10 +87,10 @@ void stopMotors() {
 }
 
 // 驱动左右电机向前
-void driveForward(float speed) {  
+void driveForward(float speed) {
   if (ensureSafeDistance()) {
-    digitalWrite(WHEEL_R2_PIN, LOW);  
-    digitalWrite(WHEEL_L2_PIN, LOW);        
+    digitalWrite(WHEEL_R2_PIN, LOW);
+    digitalWrite(WHEEL_L2_PIN, LOW);
     analogWrite(WHEEL_R1_PIN, abs(speed) * 255);  // 发送PWM信号
     analogWrite(WHEEL_L1_PIN, abs(speed) * 255);  // 发送PWM信号
   }
@@ -98,27 +98,27 @@ void driveForward(float speed) {
 
 // 驱动左右电机向后
 void driveBackward(float speed) {
-  digitalWrite(WHEEL_R1_PIN, LOW);  
-  digitalWrite(WHEEL_L1_PIN, LOW);      
+  digitalWrite(WHEEL_R1_PIN, LOW);
+  digitalWrite(WHEEL_L1_PIN, LOW);
   analogWrite(WHEEL_L2_PIN, speed * 255);  // 发送PWM信号
   analogWrite(WHEEL_R2_PIN, speed * 255);  // 发送PWM信号
 }
 
 void turnLeft() {
   int speed = 100;
-  digitalWrite(WHEEL_L1_PIN, LOW);    
-  analogWrite(WHEEL_L2_PIN, speed);   
-  digitalWrite(WHEEL_R1_PIN, speed);      
-  analogWrite(WHEEL_R2_PIN, LOW); 
+  digitalWrite(WHEEL_L1_PIN, LOW);
+  analogWrite(WHEEL_L2_PIN, speed);
+  digitalWrite(WHEEL_R1_PIN, speed);
+  analogWrite(WHEEL_R2_PIN, LOW);
 }
 void turnRight() {
   int speed = 100;
-  digitalWrite(WHEEL_L1_PIN, speed);    
-  analogWrite(WHEEL_L2_PIN, LOW);   
-  digitalWrite(WHEEL_R1_PIN, LOW);      
-  analogWrite(WHEEL_R2_PIN, speed); 
+  digitalWrite(WHEEL_L1_PIN, speed);
+  analogWrite(WHEEL_L2_PIN, LOW);
+  digitalWrite(WHEEL_R1_PIN, LOW);
+  analogWrite(WHEEL_R2_PIN, speed);
 }
-void runMotors(float speed) {  
+void runMotors(float speed) {
   if (speed < 0) {
     driveForward(speed);
   } else if (speed > 0) {
@@ -142,9 +142,9 @@ bool ensureSafeDistance() {
     float distance = ultrasonic.read();
     if (distance <= MIN_SAFE_DISTANCE) {
       stopMotors();
-      beep();    
-      return false;  
-    } 
+      beep();
+      return false;
+    }
   }
   return true;
 }
@@ -185,13 +185,13 @@ bool hasObstacleRight() {
 
 void execCmd(String cmd){
   cmd.toUpperCase();
-  Serial.println("CMD: " + cmd);  
+  Serial.println("CMD: " + cmd);
   if (cmd == "LED_R" || cmd == "LR") {
     bool state = digitalRead(LED_RED_PIN);
     digitalWrite(LED_RED_PIN, !state);
-  } 
+  }
   else if (cmd == "LED_G" || cmd == "LG") {
-    bool state = digitalRead(LED_GREEN_PIN); 
+    bool state = digitalRead(LED_GREEN_PIN);
     digitalWrite(LED_GREEN_PIN, !state);
   }
   else if (cmd == "INIT") {
@@ -201,14 +201,14 @@ void execCmd(String cmd){
     int spaceIndex = cmd.indexOf(' ');  // Find the space character
     if (spaceIndex != -1) {
       String angleStr = cmd.substring(spaceIndex + 1);  // Get the substring after "servo "
-      int angle = angleStr.toInt();  // Convert the angle part to an integer      
+      int angle = angleStr.toInt();  // Convert the angle part to an integer
       if (angle >= SERVO_MOTOR_MAX_ANGLE) {angle = SERVO_MOTOR_MAX_ANGLE;}
       else if (angle <= -SERVO_MOTOR_MAX_ANGLE) {angle = -SERVO_MOTOR_MAX_ANGLE;}
       int new_angle = SERVO_MOTOR_DEFAULT_ANGLE + (0-angle);
       int current_angle = myServo.read();
       if (current_angle !=  new_angle) {
         myServo.write(new_angle);  // Command the servo to move to the angle
-        Serial.println("Servo moved to angle: " + String(new_angle));    
+        Serial.println("Servo moved to angle: " + String(new_angle));
       }
     }
   }
@@ -218,48 +218,48 @@ void execCmd(String cmd){
       String angleStr = cmd.substring(spaceIndex + 1);  // Get the substring after "servo "
       float speed = angleStr.toFloat();  // Convert the angle part to an integer
       if (speed >= 1) {speed = 1;}
-      else if (speed <= -1) {speed = -1;}      
-      runMotors(speed);      
+      else if (speed <= -1) {speed = -1;}
+      runMotors(speed);
     }
   }
   else if (cmd == "READ_DISTANCE"  || cmd == "RD") {
     delay(500);
     float distance = distance = ultrasonic.read();
-    // Print the distance in centimeters:    
+    // Print the distance in centimeters:
     String result = "Distance: " + String(distance) + " cm";
-    Serial.println(result);      
+    Serial.println(result);
     BTserial.println(result);
   }
   else if (cmd == "BEEP"  || cmd == "B") {
     beep();
   }
-  else if (cmd == "STOP"  || cmd == "STOP") {
+  else if (cmd == "STOP"  || cmd == "S") {
     stopMotors();
   }
-  else if (cmd == "TURN_LEFT"  || cmd == "tl") {
+  else if (cmd == "TURN_LEFT"  || cmd == "TL") {
     turnLeft();
   }
-  else if (cmd == "TURN_RIGHT"  || cmd == "tr") {
+  else if (cmd == "TURN_RIGHT"  || cmd == "TR") {
     turnRight();
   }
   else if (cmd == "DETECT_OBSTACLES" || cmd == "DO") {
-    bool left = hasObstacleLeft();    
+    bool left = hasObstacleLeft();
     bool right = hasObstacleRight();
     if (left || right) {
       if (left) {
         String result = "Left side detected obstacles";
-        Serial.println(result);      
+        Serial.println(result);
         BTserial.println(result);
       }
       if (right) {
         String result = "Right side detected obstacles";
-        Serial.println(result);      
+        Serial.println(result);
         BTserial.println(result);
-      }      
+      }
     }
     if (!left && !right) {
       String result = "No obstacles detected";
-      Serial.println(result);      
+      Serial.println(result);
       BTserial.println(result);
     }
   }
