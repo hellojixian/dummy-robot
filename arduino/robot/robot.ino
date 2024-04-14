@@ -8,6 +8,7 @@
 #define SERVO_MOTOR_PIN 10
 #define SERVO_MOTOR_DEFAULT_ANGLE 115
 #define SERVO_MOTOR_MAX_ANGLE 70
+#define MIN_SAFE_DISTANCE 15
 
 #define LED_GREEN_PIN 11
 #define LED_RED_PIN A0 //A0
@@ -87,10 +88,12 @@ void stopMotors() {
 
 // 驱动左右电机向前
 void driveForward(float speed) {  
-  digitalWrite(WHEEL_R2_PIN, LOW);  
-  digitalWrite(WHEEL_L2_PIN, LOW);        
-  analogWrite(WHEEL_R1_PIN, abs(speed) * 255);  // 发送PWM信号
-  analogWrite(WHEEL_L1_PIN, abs(speed) * 255);  // 发送PWM信号
+  if (ensureSafeDistance()) {
+    digitalWrite(WHEEL_R2_PIN, LOW);  
+    digitalWrite(WHEEL_L2_PIN, LOW);        
+    analogWrite(WHEEL_R1_PIN, abs(speed) * 255);  // 发送PWM信号
+    analogWrite(WHEEL_L1_PIN, abs(speed) * 255);  // 发送PWM信号
+  }
 }
 
 // 驱动左右电机向后
@@ -131,7 +134,23 @@ void beep() {
   digitalWrite(BUZZER_PIN, LOW);
 }
 
+bool ensureSafeDistance() {
+  bool wheel_l = digitalRead(WHEEL_L1_PIN);
+  bool wheel_r = digitalRead(WHEEL_R1_PIN);
+  if (wheel_l && wheel_r) {
+    myServo.write(SERVO_MOTOR_DEFAULT_ANGLE);
+    float distance = ultrasonic.read();
+    if (distance <= MIN_SAFE_DISTANCE) {
+      stopMotors();
+      beep();    
+      return false;  
+    } 
+  }
+  return true;
+}
+
 void loop() {
+  ensureSafeDistance();
   if (Serial.available()) {
     char received = Serial.read();
     if (received == '\n') {  // 假设命令以换行符结束

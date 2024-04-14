@@ -3,9 +3,13 @@ import pygame
 import serial
 import time
 import sys
+import platform
 
 # Setup the serial connection parameters
-serial_port = '/dev/cu.Dummy_Robot'
+if platform.system().lower().startswith('win'):
+    serial_port = 'COM8'
+else:
+    serial_port = '/dev/cu.Dummy_Robot'
 baud_rate = 9600
 data_bits = serial.EIGHTBITS
 parity = serial.PARITY_NONE
@@ -16,12 +20,10 @@ BTN_A:int = 0
 BTN_B:int = 1
 BTN_X:int = 2
 BTN_Y:int = 3
-BTN_L3:int = 7
-BTN_R3:int = 8
-BTN_L1:int = 9
-BTN_R1:int = 10
-BTN_RST:int = 6
-
+BTN_R3:int = 9
+BTN_L1:int = 4
+BTN_R1:int = 5
+BTN_RST:int = 7
 
 
 # Initialize Pygame
@@ -57,7 +59,7 @@ try:
         for event in pygame.event.get():
             # Check if the joystick button is pressed
             if event.type == pygame.JOYBUTTONDOWN:
-              # print(f"Button {event.button} pressed")
+            #   print(f"Button {event.button} pressed")
               if event.button == BTN_X:
                   ser.write(b'LED_G\n')
               elif event.button == BTN_Y:
